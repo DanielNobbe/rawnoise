@@ -42,3 +42,6 @@ class RawImage:
         array = tensor.numpy()
 
         self.update_from_array(array)
+    
+    def postprocess(self) -> NDArray:
+        return self.rawpy.postprocess()
