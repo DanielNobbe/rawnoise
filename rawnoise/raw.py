@@ -3,6 +3,7 @@ import os
 import torch
 import numpy as np
 from numpy.typing import NDArray
+from copy import deepcopy
 
 class RawImage:
     """
@@ -25,8 +26,12 @@ class RawImage:
         # and load the file when necessary for postprocessing, otherwise just keep
         # the raw array
 
-    def to_array(self) -> None:
-        return self.raw_image
+    def to_array(self, copy=False) -> None:
+        if not copy:
+            return self.raw_image
+        else:
+            print(f"Returning copy")
+            return self.raw_image.copy()
     
     def to_tensor(self) -> None:
         return torch.from_numpy(self.raw_image)
@@ -39,7 +44,7 @@ class RawImage:
             raise ValueError(f"New array size ({array.shape}) doesn't match the raw image size ({self.raw_image.shape})")
         
         # assign values to raw_image array (could also replace attr)
-        self.raw_image[:] = array[:]
+        self.raw_image = array
 
     def update_from_tensor(self, tensor: torch.Tensor) -> None:
         array = tensor.numpy()
