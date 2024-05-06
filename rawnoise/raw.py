@@ -96,7 +96,6 @@ class RawImage:
             tensor = self.tensor
         tensor = self.convert_to_uint(tensor)
         array = tensor.numpy()
-        breakpoint()
 
         self.update_from_array(array)
 
