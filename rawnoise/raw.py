@@ -17,10 +17,11 @@ class RawImage:
         - update_from_tensor: set the raw image from a tensor
     """
 
-    def __init__(self, path: str) -> None:
+    def __init__(self, path: str, saturation_level: float = 2**14 - 1) -> None:
         self.path = path
         self.filename = os.path.splitext(os.path.basename(path))[0]
         self.tensor = None
+        self.saturation_level = saturation_level
         # self.convert_to_float = ConvertImageDtype(torch.float)
         # self.convert_to_uint = ConvertImageDtype(torch.uint16)
         # NOTE: Need to check how cuda is handled here, since
@@ -44,27 +45,25 @@ class RawImage:
             return self.raw_image.copy()
         
     @staticmethod
-    def convert_to_float(tensor: torch.Tensor) -> torch.Tensor:
+    def convert_to_float(tensor: torch.Tensor, saturation_level: float = 2**14 - 1) -> torch.Tensor:
         # takes a uint16 tensor, converts to float,
         # then scales to range 0-1
         if tensor.dtype != torch.uint16:
             raise ValueError("tensor must be uint16")
-        
-        max = torch.iinfo(tensor.dtype).max
+
         tensor = tensor.to(dtype=torch.float32)
-        tensor = tensor / max
+        tensor = tensor / saturation_level
 
         return tensor
     
     @staticmethod
-    def convert_to_uint(tensor: torch.Tensor, eps=1e-6) -> torch.Tensor:
+    def convert_to_uint(tensor: torch.Tensor, eps=1e-6, saturation_level: float = 2**14 - 1) -> torch.Tensor:
         # takes a float tensor, converts to uint16
 
         if tensor.dtype != torch.float32:
             raise ValueError("tensor must be float32")
 
-        max = torch.iinfo(torch.uint16).max
-        tensor = tensor * (max + 1.0 - eps)  # stolen from torchvis impl
+        tensor = tensor * (saturation_level + 1.0 - eps)  # stolen from torchvis impl
         # (https://github.com/pytorch/vision/blob/f766d7ac01a4fc6a98b43047e351e51ad7329f5e/torchvision/transforms/_functional_tensor.py#L64)
         tensor = tensor.to(dtype=torch.uint16)
 
@@ -75,7 +74,7 @@ class RawImage:
             tensor = torch.from_numpy(self.raw_image)
             # TODO: Sensors are only 12-14bit, so noise should be applied
             # in that precision too.. Use 32bit for now though
-            tensor = self.convert_to_float(tensor)
+            tensor = self.convert_to_float(tensor, saturation_level=self.saturation_level)
 
             self.tensor = tensor
         
