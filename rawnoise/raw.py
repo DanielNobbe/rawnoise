@@ -22,20 +22,12 @@ class RawImage:
         self.filename = os.path.splitext(os.path.basename(path))[0]
         self.tensor = None
         self.saturation_level = saturation_level
-        # self.convert_to_float = ConvertImageDtype(torch.float)
-        # self.convert_to_uint = ConvertImageDtype(torch.uint16)
         # NOTE: Need to check how cuda is handled here, since
         # the dtype contains cuda info
         with rawpy.imread(self.path) as raw:
             self.raw_image = raw.raw_image.copy()
             # copy so it's detached from the raw object,
             # they do some weird hacks in rawpy
-        # it's a bit annoying, since rawpy needs closing,
-        # it probably keeps the file open the entire time, which isn't really
-        # necessary.
-        # would be better to just keep a reference to the file path,
-        # and load the file when necessary for postprocessing, otherwise just keep
-        # the raw array
 
     def to_array(self, copy=False) -> None:
         if not copy:
@@ -47,7 +39,7 @@ class RawImage:
     @staticmethod
     def convert_to_float(tensor: torch.Tensor, saturation_level: float = 2**14 - 1) -> torch.Tensor:
         # takes a uint16 tensor, converts to float,
-        # then scales to range 0-1
+        # then scales to range 0-1 (using 14bit max value)
         if tensor.dtype != torch.uint16:
             raise ValueError("tensor must be uint16")
 
@@ -59,6 +51,7 @@ class RawImage:
     @staticmethod
     def convert_to_uint(tensor: torch.Tensor, eps=1e-6, saturation_level: float = 2**14 - 1) -> torch.Tensor:
         # takes a float tensor, converts to uint16
+        # uses 14bit max value
 
         if tensor.dtype != torch.float32:
             raise ValueError("tensor must be float32")
