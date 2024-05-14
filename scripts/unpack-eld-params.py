@@ -60,13 +60,19 @@ def main():
 
 
     """
-
+    g_scale_sigma = params['Profile-1']['g_scale']['sigma']
     g_scale_bias = params['Profile-1']['g_scale']['bias']
     g_scale_slope = params['Profile-1']['g_scale']['slope']
     Kmax = params['Kmax']
     Kmin = params['Kmin']
 
-    sigma = g_scale_bias + g_scale_slope * (Kmax - Kmin)/2
+    # they multiply sigma by log_K, which is found as
+    # log_K = np.random.uniform(low=np.log(1e-1), high=np.log(30))
+    # np.log(1e-1) = -2.3025
+    # np.log(30) = 3.401
+    # E =~ 1.0
+
+    sigma = g_scale_bias + g_scale_slope * 1.0
 
     print(sigma)
 

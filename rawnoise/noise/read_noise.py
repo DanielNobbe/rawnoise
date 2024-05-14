@@ -27,7 +27,7 @@ class ReadNoise(torch.nn.Module):
         distr = torch.distributions.Normal(0, self.sigma)
         # we define the distr here so that we can sample the params
         # later, and we will sample a lot anyhow
-        noise = distr.sample(tensor.shape) * torch.sqrt(self.K * tensor)
+        noise = distr.sample(tensor.shape)
         # we don't need to learn the distr params, so don't use rsample
 
         tensor /= self.ratio

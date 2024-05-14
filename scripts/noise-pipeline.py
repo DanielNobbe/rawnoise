@@ -8,7 +8,7 @@ def main():
 
     uint14_max = 16384  # values are 14bit in raw? TODO: CHeck
     
-    sigma = 16. / uint14_max
+    sigma = 1.7 / uint14_max
     ratio = 100
 
     pipeline = NoisePipeline(
