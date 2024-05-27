@@ -1,7 +1,6 @@
 import torch
 import os
 from rawnoise.raw import RawImage
-from rawnoise.noise import ReadNoise
 from copy import deepcopy
 
 class NoisePipeline(torch.nn.Module):
@@ -28,4 +27,5 @@ class NoisePipeline(torch.nn.Module):
 
         tensor = self.apply_noise(tensor)
 
-        return raw.update_from_tensor(tensor)
+        raw.update_from_tensor(tensor)
+        return raw
