@@ -109,6 +109,8 @@ def main():
     bias and shape different every time?
     The scale decides the magnitude of the noise, in addition to the gain, so obviously the _amount_ of noise increases as the gain increases.
     But the distribution of the noise itself is different every time..
+    They do say that the bias values are recorded for different K, 
+    but they do not tell us which? 
 
     For now, calculate what the scale should be, and we just randomly pick one of the bias/shape pairs:
      [ 1.1709546 ,  1.0815442 ,  1.1473132 ,  1.0724843 ], -0.1428
@@ -119,6 +121,22 @@ def main():
     log(sigma) = sigma_slope*log(K) + sigma_bias
     we set log(K) to 1, since that came out of the uniform distr above
 
+    K is the gain, so technically dependent on the image? Although it is
+    kind of determined by how we apply our augmentations. 
+    So I should add it into the pipeline again.
+    Note that K relates directly to the ISO, and seemingly has a log
+    relationship to it -- 
+        log(K) is sampled uniformly from log(Kmin)-log(Kmax)?
+        For the recordings , they seemingly take a linspace
+        between log(Kmin),log(Kmax), and then do measurements
+        at each log(K) value?
+        Interestingly, the values go to zero, indicating that they too are
+        logarithms.
+        In some answer in the issues the author claims there is no
+        specific correlation between the measurements of scale and K, so
+        that means we can just randomly sample one.
+        Might not be 100% true, but will probably statistically work
+    
     """
 
     # G_scale entries are for Tukey Lambda?
@@ -126,9 +144,17 @@ def main():
     G_scale_bias = params['Profile-1']['G_scale']['bias']
     G_scale_slope = params['Profile-1']['G_scale']['slope']
 
-    sigma = G_scale_bias + G_scale_slope * 1.0
+    log_G_sigma = G_scale_bias + G_scale_slope * 1.0
     
+    print(log_G_sigma)
     
+    G_sigma = np.exp(log_G_sigma)
+
+    print(G_sigma)
+
+    # gives G_sigma = 2.7949
+
+
 
 if __name__ == '__main__':
     main()
