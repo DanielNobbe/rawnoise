@@ -30,6 +30,7 @@ class RawImage:
             # they do some weird hacks in rawpy
 
     def to_array(self, copy=False) -> None:
+        print(f"NOTE: The to_array method does not convert the raw image to float values ranged [0,1], but returns the raw integer values.")
         if not copy:
             return self.raw_image
         else:

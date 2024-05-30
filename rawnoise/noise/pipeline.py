@@ -11,6 +11,9 @@ class NoisePipeline(torch.nn.Module):
         is handled by the rawpy library, which takes in NumPy arrays.
         We use PyTorch so that we can implement the postprocessing pipeline
         in PyTorch at a later stage too. 
+
+        Here we should sample the K parameter, which is central to
+        multiple types of noise.
     """
     def __init__(self, read_noise) -> None:
         super().__init__()
