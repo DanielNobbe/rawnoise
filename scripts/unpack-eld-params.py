@@ -1,5 +1,6 @@
 import numpy as np
 import os
+from copy import deepcopy
 import json
 
 def main():
@@ -137,6 +138,10 @@ def main():
         that means we can just randomly sample one.
         Might not be 100% true, but will probably statistically work
     
+        
+    K is directly dependent on the ISO value of the camera.
+    Kmin is estimated system gain at minimum ISO value of camera
+    Kmax is estimated gain at max ISO setting of camera
     """
 
     # G_scale entries are for Tukey Lambda?
@@ -154,6 +159,48 @@ def main():
 
     # gives G_sigma = 2.7949
 
+    """
+    Unpack to json file for easier processing
+    params : {
+        'G_shape': np.ndarray[18],
+
+        'Profile-1': {
+            'G_scale': {
+                'sigma': float,
+                'bias': float,
+                'slope': float
+            },
+            'R_scale': {
+                'bias': float,
+                'slope': float,
+                'sigma': float
+            },
+            'g_scale': {
+                'bias': float,
+                'slope': float,
+                'sigma': float
+            }
+        }
+
+        'Kmin': float,
+
+        'color_bias': np.ndarray[18, 4],
+
+        'Kmax': float
+    }
+
+    Note: there may be multiple profile-x. The only numpy arrays are color_bias and G_shape, so we can convert these to nested lists
+    """
+
+    ser = deepcopy(params)
+
+    ser['G_shape'] = ser['G_shape'].tolist()
+    ser['color_bias'] = ser['color_bias'].tolist()
+
+    target_file = '/Users/danielnobbe/projects/rawnoise/eld-params/SonyA7S2_params.json'
+
+    with open(target_file, 'w') as jf:
+        json.dump(ser, jf, indent=4)
 
 
 if __name__ == '__main__':
