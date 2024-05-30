@@ -1,4 +1,4 @@
-from rawnoise.noise import NoisePipeline, TukeyReadNoise, GaussianReadNoise
+from rawnoise.noise import NoisePipeline, TukeyReadNoise, GaussianReadNoise, load_params_from_json
 from rawnoise.raw import RawImage
 
 def main():
@@ -10,6 +10,9 @@ def main():
     
     sigma = 2.8 / uint14_max
     ratio = 100
+
+    params = load_params_from_json('eld-params/SonyA7S2_params.json')
+
 
     pipeline = NoisePipeline(
         read_noise=TukeyReadNoise(
