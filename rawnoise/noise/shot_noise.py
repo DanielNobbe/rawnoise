@@ -8,13 +8,14 @@ class GainSampler:
         Note that it lives on CPU, if necessary it is possible to 
         bring it to GPU by moving self.distr.low/high to cuda.
     """
-    def __init__(self, params: GainParams) -> None:
+    def __init__(self, params: GainParams, saturation_level: int = 2**14-1) -> None:
         self.params = params
         self.distr = Uniform(params.Kmin, params.Kmax)
+        self.saturation_level = saturation_level
 
     def sample(self) -> float:
         K_log = self.distr.sample()
-        return torch.exp(K_log)
+        return torch.exp(K_log) / self.saturation_level
     
 
 
