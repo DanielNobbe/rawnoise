@@ -27,12 +27,13 @@ class TukeyParams:
 def load_gain_params(params: dict) -> GainParams:
     return GainParams(Kmin=params['Kmin'], Kmax=params['Kmax'])
 
+
 def load_tukey_params(params: dict) -> TukeyParams:
     return TukeyParams(
         ScaleParams(
-            slope=params['G_scale']['slope'],
-            sigma=params['G_scale']['sigma'],
-            slope=params['G_scale']['bias']
+            slope=params['Profile-1']['G_scale']['slope'],
+            sigma=params['Profile-1']['G_scale']['sigma'],
+            bias=params['Profile-1']['G_scale']['bias']
         ),
         shape=params['G_shape'],
         color_bias=params['color_bias']
