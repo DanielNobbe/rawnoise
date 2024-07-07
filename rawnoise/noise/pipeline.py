@@ -23,11 +23,10 @@ class NoisePipeline(torch.nn.Module):
         self.shot_noise: ShotNoise = shot_noise
         self.gain_sampler: GainSampler = gain_sampler
 
-    def apply_noise(self, tensor: torch.Tensor) -> torch.Tensor:
-        # gain = self.gain_sampler.sample()
-    
+    def apply_noise(self, tensor: torch.Tensor, ratio: float = 1.0) -> torch.Tensor:
+        gain = self.gain_sampler.sample()
         # for testing shot noise
-        return self.shot_noise(tensor)
+        return self.shot_noise(tensor, K=gain, ratio=ratio)
 
 
         # return self.read_noise(tensor)
