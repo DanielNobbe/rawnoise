@@ -8,26 +8,15 @@ class GaussianReadNoise(torch.nn.Module):
         Read noise is Tukey-Lambda distributed, but we will first 
         implement it as Gaussian noise.
     """
-    def __init__(self, sigma: float = 10., ratio: float = 200., K: float = 0.1) -> None:
+    def __init__(self, ratio: float = 200.) -> None:
         super().__init__()
-        self.sigma = sigma
         self.ratio = ratio
-        self.K = K
 
-        print(f"Read noise sigma: {sigma}")
-        
-        # good default value for sigma is 10, see unpack-eld-params script
-        # this probably is in the range of 16bit uint though?
-        # So divide by 65k? 
-
-    def forward(self, tensor: torch.Tensor) -> torch.Tensor:
-        # TODO: implement as gaussian noise
+    def forward(self, tensor: torch.Tensor, sigma: float = 10.) -> torch.Tensor:
         # noise mean is zero
         # noise std dev is sigma
         # mean is zero, no bias in noise
-        distr = torch.distributions.Normal(0, self.sigma)
-        # we define the distr here so that we can sample the params
-        # later, and we will sample a lot anyhow
+        distr = torch.distributions.Normal(0, sigma)
         noise = distr.sample(tensor.shape)
         # we don't need to learn the distr params, so don't use rsample
 
