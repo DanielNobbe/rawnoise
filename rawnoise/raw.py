@@ -30,6 +30,7 @@ class RawImage:
             # they do some weird hacks in rawpy
 
     def to_array(self, copy=False) -> None:
+        print(f"NOTE: The to_array method does not convert the raw image to float values ranged [0,1], but returns the raw integer values.")
         if not copy:
             return self.raw_image
         else:
@@ -67,6 +68,7 @@ class RawImage:
             tensor = torch.from_numpy(self.raw_image)
             # TODO: Sensors are only 12-14bit, so noise should be applied
             # in that precision too.. Use 32bit for now though
+            # although quantisation noise can also be added
             tensor = self.convert_to_float(tensor, saturation_level=self.saturation_level)
 
             self.tensor = tensor
