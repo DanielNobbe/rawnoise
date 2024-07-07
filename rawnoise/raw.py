@@ -68,6 +68,7 @@ class RawImage:
             tensor = torch.from_numpy(self.raw_image)
             # TODO: Sensors are only 12-14bit, so noise should be applied
             # in that precision too.. Use 32bit for now though
+            # although quantisation noise can also be added
             tensor = self.convert_to_float(tensor, saturation_level=self.saturation_level)
 
             self.tensor = tensor
