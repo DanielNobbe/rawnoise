@@ -1,5 +1,6 @@
-from rawnoise.noise import NoisePipeline, TukeyReadNoise, GaussianReadNoise, load_params_from_json, ShotNoise
+from rawnoise.noise import NoisePipeline, TukeyReadNoise, GaussianReadNoise, load_params_from_json, ShotNoise, GainSampler
 from rawnoise.raw import RawImage
+from rawnoise.noise.params import GainParams
 
 def main():
     raw = RawImage('inputs/DSC00866.ARW')
@@ -9,12 +10,12 @@ def main():
     uint14_max = 16384  # values are 14bit in raw? TODO: CHeck
     
     sigma = 2.8 / uint14_max
-    ratio = 100
+    ratio = 1
 
     params = load_params_from_json('eld-params/SonyA7S2_params.json')
 
 
-    K = 50. / uint14_max  # uint14_max is saturation level
+    # K = .1 / uint14_max  # uint14_max is saturation level
 
     # --> this means that the shot noise variation will be stronger with
     # strong amplification. Which makes sense, the number of photons stay 
@@ -27,19 +28,31 @@ def main():
     # 1. lower exposure (in which case the absolute difference is about the same, potentially even smaller)
     # 2. more gain, in which case the absolute difference is amplified
     # don't know if more photons would mean if it's more likely that the value is close to the expected value
+    # When the shutter time is very long, the number of photons should 
+    # be relatively high, despite the gain being relatively low.
+    # Does an image of the same intensity with longer shutter time
+    # have a larger effect of shot noise?
+    # --> in the end, the gain scales down as the shutter speed scales up
+    # and intuitively, we wait for more real photons to come in,
+    # so their number should be closer to the expected value.
+
+    # K = GainSampler(params=params['gain']).sample()
+
+    # the ration here is used to simulate low light, first the image is divided by the ratio, then it is multiplied. This doesn't seem to be necessary for us, since we want to model noise on normal, non-dark images.
+    
 
     pipeline = NoisePipeline(
-        # read_noise=TukeyReadNoise(
-        #     lamda=-0.1428,
-        #     sigma=sigma,
-        #     ratio=ratio,
-        #     K = 0.1  # from ELD it's ~0.09
-        # )
-        shot_noise=ShotNoise(
-            K=K,
-            ratio=1.0
+        gain_sampler=GainSampler(params=params['gain']),
+        read_noise=TukeyReadNoise(
+            lamda=-0.1428,
+            sigma=sigma,
+            ratio=ratio,
+            K = 0.1  # from ELD it's ~0.09
         )
+        shot_noise=ShotNoise()
     )
+
+    # K affects the sampled scale parameters. We'll need to set up sampling inside of the noise classes to get the scale for each call.
 
     # K = 0.1 is much too high? should it be divided by the saturation value somewhere? Yeah probably we need to get the number of actual photons
 
