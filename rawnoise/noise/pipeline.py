@@ -41,7 +41,7 @@ class NoisePipeline(torch.nn.Module):
 
     def __call__(self, raw: RawImage, copy: bool = False) -> RawImage:
         if copy:
-            # if the original object can't be modified, set this to true
+            # if the original object shouldn't be modified, set this to true
             raw = deepcopy(raw)
         tensor = raw.to_tensor()
 
