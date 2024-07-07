@@ -1,4 +1,4 @@
-from rawnoise.noise import NoisePipeline, TukeyReadNoise, GaussianReadNoise, load_params_from_json, ShotNoise, GainSampler
+from rawnoise.noise import NoisePipeline, TukeyReadNoise, GaussianReadNoise, load_params_from_json, ShotNoise, GainSampler, TukeySampler
 from rawnoise.raw import RawImage
 from rawnoise.noise.params import GainParams
 
@@ -43,13 +43,9 @@ def main():
 
     pipeline = NoisePipeline(
         gain_sampler=GainSampler(params=params['gain']),
-        read_noise=TukeyReadNoise(
-            lamda=-0.1428,
-            sigma=sigma,
-            ratio=ratio,
-            K = 0.1  # from ELD it's ~0.09
-        )
-        shot_noise=ShotNoise()
+        shot_noise=ShotNoise(),
+        tukey_sampler=TukeySampler(params=params['tukey']),
+        read_noise=TukeyReadNoise(),
     )
 
     # K affects the sampled scale parameters. We'll need to set up sampling inside of the noise classes to get the scale for each call.
