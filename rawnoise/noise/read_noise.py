@@ -17,18 +17,14 @@ class GaussianReadNoise(torch.nn.Module):
         # noise std dev is sigma
         # mean is zero, no bias in noise
         distr = torch.distributions.Normal(0, sigma)
+
         noise = distr.sample(tensor.shape)
-        # we don't need to learn the distr params, so don't use rsample
 
         tensor /= self.ratio
 
         result = tensor + noise
 
         result *= self.ratio
-
-        ## how do we get the right value? Should be careful to not exceed 1
-        # anyway
-        # TODO: Clip to 1.0
 
         result = torch.clamp(result, 0, 1)
 
@@ -78,7 +74,6 @@ class TukeySampler:
         scale = self.scale_sampler.sample(gain)
         shape = self.params.shape[torch.randint(0, len(self.params.shape), (1,))]
         # TODO: Use generator for this sample
-        print(f"TukeySampler: Scale {scale}, shape {shape}")
         return scale / self.saturation_level, shape
 
 
@@ -94,11 +89,6 @@ class TukeyReadNoise(torch.nn.Module):
         self.ratio = ratio
 
         self.base_distr = torch.distributions.Uniform(eps, 1.0)
-
-        
-        # good default value for sigma is 10, see unpack-eld-params script
-        # this probably is in the range of 16bit uint though?
-        # So divide by 65k? 
 
     
     def sample_TL(self, sample_shape=torch.Size, lamda: float = 1.0, sigma: float = 2.794, eps=1e-9) -> torch.Tensor:
@@ -126,22 +116,14 @@ class TukeyReadNoise(torch.nn.Module):
 
         This is with a bias of zero, to deal with the bias we need to use the raw_colors in the rawpy object, but we can apply straight to the input/output tensor
         """
-        
-        # we define the distr here so that we can sample the params
-        # later, and we will sample a lot anyhow
-        noise = self.sample_TL(tensor.shape, lamda, sigma)
 
-        # we don't need to learn the distr params, so don't use rsample
+        noise = self.sample_TL(tensor.shape, lamda, sigma)
 
         tensor /= self.ratio
 
         result = tensor + noise
 
         result *= self.ratio
-
-        ## how do we get the right value? Should be careful to not exceed 1
-        # anyway
-        # TODO: Clip to 1.0
 
         result = torch.clamp(result, 0, 1)
 

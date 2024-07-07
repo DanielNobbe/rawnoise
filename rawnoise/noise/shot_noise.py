@@ -17,9 +17,7 @@ class GainSampler:
 
     def sample(self) -> float:
         K_log = self.distr.sample()
-        print(f"K_log: {K_log}")
         K = torch.exp(K_log)
-        print(f"K (prediv): {K}")
         return K / self.saturation_level
     
 

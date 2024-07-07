@@ -5,10 +5,10 @@ import json
 
 def main():
 
-    # npy_path = '/Users/danielnobbe/projects/rawnoise/eld-params/NikonD850_params.npy'
+    npy_path = '/Users/danielnobbe/projects/rawnoise/eld-params/NikonD850_params.npy'
     # npy_path = '/Users/danielnobbe/projects/rawnoise/eld-params/CanonEOS70D_params.npy'
     # npy_path = '/Users/danielnobbe/projects/rawnoise/eld-params/CanonEOS700D_params.npy'
-    npy_path = '/Users/danielnobbe/projects/rawnoise/eld-params/SonyA7S2_params.npy'
+    # npy_path = '/Users/danielnobbe/projects/rawnoise/eld-params/SonyA7S2_params.npy'
 
     with open(npy_path, 'rb') as f:
         params = np.load(f, allow_pickle=True).item()
@@ -77,7 +77,6 @@ def main():
     sigma = g_scale_bias + g_scale_slope * 1.0
 
     print(sigma)
-    breakpoint()
 
     """Tukey lambda has three params:
     - shape (lambda)
@@ -197,7 +196,7 @@ def main():
     ser['G_shape'] = ser['G_shape'].tolist()
     ser['color_bias'] = ser['color_bias'].tolist()
 
-    target_file = '/Users/danielnobbe/projects/rawnoise/eld-params/SonyA7S2_params.json'
+    target_file = '/Users/danielnobbe/projects/rawnoise/eld-params/NikonD850_params.json'
 
     with open(target_file, 'w') as jf:
         json.dump(ser, jf, indent=4)
