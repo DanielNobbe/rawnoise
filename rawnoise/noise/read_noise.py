@@ -1,5 +1,6 @@
 import torch
-
+from torch.distributions import Normal
+from rawnoise.noise.params import ScaleParams, TukeyParams
 
 class GaussianReadNoise(torch.nn.Module):
     """
@@ -45,35 +46,79 @@ class GaussianReadNoise(torch.nn.Module):
         return result
     
 
+class ScaleSampler:
+    """
+        Class used to sample a scale parameter based on
+        slope, sigma and bias parameters. See ScaleParams 
+        class.
+
+        We will finally sample the TL scale parameter from a Gaussian.
+        The sampling works as follows:
+            1. Gaussian mean: slope * log(K) + bias
+            2. Gaussian scale: sigma
+        --> since K can be different between each image, we cannot initialise the full distribution.
+        But we can keep a standard-normal and reparametrise it when sampling
+    """
+    def __init__(self, params: ScaleParams) -> None:
+        self.params = params
+
+        self.distr = Normal(0.0, 1.0)
+
+    def sample(self, gain: float = 1.0) -> float:
+        
+        mean = self.params.slope * torch.log(gain) + self.params.bias
+
+        output = self.distr.sample() * self.params.sigma + mean
+
+        return output
+
+
+class TukeySampler:
+    """
+        Class used to sample the Tukey-Lambda scale
+        and shape parameters.
+        It uses the ScaleSampler to sample the scale
+        TODO: Include colour bias too
+    """
+    def __init__(self, params: TukeyParams, saturation_level: float = 2**14-1) -> None:
+        self.params = params
+        self.scale_sampler = ScaleSampler(params.scale)
+        self.saturation_level = saturation_level
+
+    def sample(self, gain: float = 1.0) -> float:
+        scale = self.scale_sampler.sample(gain)
+        shape = self.params.shape[torch.randint(0, len(self.params.shape), (1,))]
+        # TODO: Use generator for this sample
+        print(f"TukeySampler: Scale {scale}, shape {shape}")
+        return scale / self.saturation_level, shape
+
 
 class TukeyReadNoise(torch.nn.Module):
     """
         This class defines a function that adds read noise to an image.
         Read noise is Tukey-Lambda distributed.
+
+        NOTE: We are not using the colour bias at this moment.
     """
-    def __init__(self, lamda: float = 1.0, sigma: float = 2.794, ratio: float = 200., K: float = 0.1) -> None:
+    def __init__(self, ratio: float = 1., eps=1e-9) -> None:
         super().__init__()
-        self.lamda = lamda
-        self.sigma = sigma
         self.ratio = ratio
-        self.K = K
 
-        self.distr = torch.distributions.Uniform(0, 1.0)
+        self.base_distr = torch.distributions.Uniform(eps, 1.0)
 
-        print(f"Read noise sigma: {sigma}")
         
         # good default value for sigma is 10, see unpack-eld-params script
         # this probably is in the range of 16bit uint though?
         # So divide by 65k? 
 
     
-    def sample_TL(self, sample_shape=torch.Size, eps=1e-9) -> torch.Tensor:
-        U = self.distr.sample(sample_shape)
-        Q = (1/(self.lamda + eps)) * (U**self.lamda - (1 - U)**self.lamda)
-        return Q * self.sigma
+    def sample_TL(self, sample_shape=torch.Size, lamda: float = 1.0, sigma: float = 2.794, eps=1e-9) -> torch.Tensor:
+        U = self.base_distr.sample(sample_shape)
+        Q = (1/(lamda + eps)) * (U**lamda - (1 - U)**lamda)
+        return Q * sigma
 
 
-    def forward(self, tensor: torch.Tensor) -> torch.Tensor:
+    def forward(self, tensor: torch.Tensor, lamda: float = 1.0, sigma: float = 2.794) -> torch.Tensor:
         """
         We can sample from the Tukey-Lambda distribution using inverse
         transform sampling, since the cumulative distribution function
@@ -95,7 +140,7 @@ class TukeyReadNoise(torch.nn.Module):
         
         # we define the distr here so that we can sample the params
         # later, and we will sample a lot anyhow
-        noise = self.sample_TL(tensor.shape)
+        noise = self.sample_TL(tensor.shape, lamda, sigma)
 
         # we don't need to learn the distr params, so don't use rsample
 
